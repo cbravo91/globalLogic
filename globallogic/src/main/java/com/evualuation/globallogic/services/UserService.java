@@ -6,6 +6,7 @@ import com.evualuation.globallogic.dto.PhoneDTO;
 import com.evualuation.globallogic.dto.ResponseDTO;
 import com.evualuation.globallogic.dto.ResponseLoginDTO;
 import com.evualuation.globallogic.dto.UserDTO;
+import com.evualuation.globallogic.exception.PreconditionFailedException;
 import com.evualuation.globallogic.exception.UnprocessableEntityException;
 import com.evualuation.globallogic.mapper.UserMapper;
 import com.evualuation.globallogic.models.Phone;
@@ -21,6 +22,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -40,22 +42,32 @@ public class UserService {
     public ResponseDTO createUser(UserDTO userDTO) {
 
         ResponseDTO responseDTO = new ResponseDTO();
-        UserMapper.mapper.toEntity(userDTO);
-        User user = UserMapper.mapper.toEntity(userDTO);
-        user.setCreated(LocalDateTime.now());
-        user.setActive(true);
-        user.setUuid(UUID.randomUUID());
-        responseDTO.setToken(generator.generateJwt(user));
-        String hashedPassword = BCrypt.hashpw(userDTO.getPassword(), BCrypt.gensalt());
-        user.setPassword(hashedPassword);
-        userRepository.save(user);
-        responseDTO.setCreated(user.getCreated().format(formatter));
-        responseDTO.setActive(user.isActive());
-        responseDTO.setUuid(user.getUuid());
+        if (findUserByEmail(userDTO.getEmail()).isPresent())
+        {
+            throw new PreconditionFailedException("email already registered try a different one");
+            }
+        else
+        {
+            UserMapper.mapper.toEntity(userDTO);
+            User user = UserMapper.mapper.toEntity(userDTO);
+            user.setCreated(LocalDateTime.now());
+            user.setActive(true);
+            user.setUuid(UUID.randomUUID());
+            responseDTO.setToken(generator.generateJwt(user));
+            String hashedPassword = BCrypt.hashpw(userDTO.getPassword(), BCrypt.gensalt());
+            user.setPassword(hashedPassword);
+            userRepository.save(user);
+            responseDTO.setCreated(user.getCreated().format(formatter));
+            responseDTO.setActive(user.isActive());
+            responseDTO.setUuid(user.getUuid());
 
-        return responseDTO;
+            return responseDTO;
+        }
     }
 
+    public Optional<User> findUserByEmail(String email) {
+        return userRepository.findUserByEmail(email);
+    }
 
     public ResponseLoginDTO getUserInfoByToken(String token) {
         ResponseLoginDTO responseLoginDTO = new ResponseLoginDTO();
@@ -70,13 +82,13 @@ public class UserService {
         responseLoginDTO.setEmail(claims.get("email", String.class));
         responseLoginDTO.setPassword(claims.get("password", String.class));
         try {
-        ObjectMapper objectMapper = new ObjectMapper();
+            ObjectMapper objectMapper = new ObjectMapper();
 
             List<PhoneDTO> phones = objectMapper.convertValue(claims.get("phones"), objectMapper.getTypeFactory().constructCollectionType(List.class, Phone.class));
             responseLoginDTO.setPhones(phones);
             return responseLoginDTO;
         } catch (Exception e) {
-           throw new UnprocessableEntityException("Token inválido");
+            throw new UnprocessableEntityException("Token inválido");
         }
 
     }

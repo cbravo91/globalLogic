@@ -2,10 +2,7 @@ package com.evualuation.globallogic.exception.handler;
 
 import com.evualuation.globallogic.dto.ErrorDTO;
 import com.evualuation.globallogic.dto.ResponseErrorDTO;
-import com.evualuation.globallogic.exception.BadRequestException;
-import com.evualuation.globallogic.exception.JwtProcessException;
-import com.evualuation.globallogic.exception.NotFoundException;
-import com.evualuation.globallogic.exception.UnprocessableEntityException;
+import com.evualuation.globallogic.exception.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
@@ -57,5 +54,12 @@ public class RestExceptionHandler {
         ResponseErrorDTO  error = new ResponseErrorDTO();
         error.setError(List.of(new ErrorDTO(Timestamp.valueOf(LocalDateTime.now()),ex.getMessage(),422)));
         return  ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(error);
+    }
+
+    @ExceptionHandler(value= PreconditionFailedException.class)
+    public ResponseEntity<ResponseErrorDTO> handlePreconditionFailed(PreconditionFailedException ex){
+        ResponseErrorDTO  error = new ResponseErrorDTO();
+        error.setError(List.of(new ErrorDTO(Timestamp.valueOf(LocalDateTime.now()),ex.getMessage(),412)));
+        return  ResponseEntity.status(HttpStatus.PRECONDITION_FAILED).body(error);
     }
 }
