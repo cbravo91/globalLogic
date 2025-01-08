@@ -31,7 +31,7 @@ public class RestExceptionHandler {
 
     @ExceptionHandler(value= MethodArgumentNotValidException .class)
     public ResponseEntity<ResponseErrorDTO> handleBadRequestException(MethodArgumentNotValidException ex){
-        int statusCode = ex.getStatusCode().value();
+        int statusCode = HttpStatus.BAD_REQUEST.value();
         ResponseErrorDTO responseErrorDTO = new ResponseErrorDTO();
         responseErrorDTO.setError(
                 ex.getBindingResult()
@@ -39,7 +39,7 @@ public class RestExceptionHandler {
                 .stream()
                 .map(error -> new ErrorDTO(Timestamp.valueOf(LocalDateTime.now()),error.getDefaultMessage(),statusCode))
                 .collect(Collectors.toList()));
-        return ResponseEntity.status(ex.getStatusCode()).body(responseErrorDTO);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(responseErrorDTO);
     }
 
     @ExceptionHandler(value= JwtProcessException.class)

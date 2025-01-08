@@ -1,6 +1,6 @@
 package com.evualuation.globallogic.models;
 
-import jakarta.persistence.*;
+import javax.persistence.*;
 
 @Entity
 @Table(name = "phone")
@@ -11,7 +11,7 @@ public class Phone {
     private String countryCode;
 
     @ManyToOne
-    @JoinColumn (name="user_uuid")
+    @JoinColumn(name="user_uuid")
     private User user;
 
     public Long getNumber() {
